@@ -1,4 +1,4 @@
-import { IsInt, Min, Max, IsOptional } from 'class-validator';
+import { IsInt, Min, Max, IsOptional, IsIn } from 'class-validator';
 import { Type } from 'class-transformer';
 import { ApiProperty } from '@nestjs/swagger';
 import { PopularityType } from '../enums/popularity-type.enum';
@@ -28,8 +28,9 @@ export class PopularByMonthDto {
     description: 'Type of popularity query',
     example: 'song', // or 'album'
     required: false,
-    enum: ['song', 'album'],
+    enum: PopularityType,
   })
   @IsOptional()
+  @IsIn(Object.values(PopularityType), { message: 'Type must be either "song" or "album".' })
   type?: PopularityType;
 }

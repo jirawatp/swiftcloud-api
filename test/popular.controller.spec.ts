@@ -1,7 +1,7 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { PopularController } from '../src/popular/popular.controller';
 import { PopularService } from '../src/popular/popular.service';
-import { PopularByMonthDto } from '../src/popular/dto/popular-by-month.dto';
+import { PopularByMonthDto } from '../src/common/dto/popular-by-month.dto';
 import { PopularityType } from '../src/common/enums/popularity-type.enum';
 
 describe('PopularController', () => {
@@ -9,7 +9,7 @@ describe('PopularController', () => {
   let service: PopularService;
 
   const mockPopularService = {
-    getPopularSongsByMonth: jest.fn(),
+    getPopularByMonth: jest.fn(),
   };
 
   beforeEach(async () => {
@@ -39,11 +39,11 @@ describe('PopularController', () => {
         { title: 'Song A', artist: 'Artist 1', album: 'Album Alpha', plays: 150 },
       ];
 
-      mockPopularService.getPopularSongsByMonth.mockResolvedValue(expectedResult);
+      mockPopularService.getPopularByMonth.mockResolvedValue(expectedResult);
 
       const result = await controller.getPopularByMonth(dto);
       expect(result).toEqual(expectedResult);
-      expect(service.getPopularSongsByMonth).toHaveBeenCalledWith(2021, 7, PopularityType.SONG);
+      expect(service.getPopularByMonth).toHaveBeenCalledWith(2021, 7, PopularityType.SONG);
     });
   });
 });

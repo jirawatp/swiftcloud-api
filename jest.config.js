@@ -1,10 +1,14 @@
 module.exports = {
-  preset: 'ts-jest',
-  testEnvironment: 'node',
+  moduleFileExtensions: ['js', 'json', 'ts'],
+  rootDir: '.',
+  testRegex: '.spec.ts$',
   transform: {
-    '^.+\\.ts?$': 'ts-jest',
+    '^.+\\.(t|j)s$': 'ts-jest',
   },
-  moduleFileExtensions: ['ts', 'js'],
-  testMatch: ['**/test/**/*.spec.ts'],
+  collectCoverageFrom: ['**/*.(t|j)s'],
   coverageDirectory: './coverage',
+  testEnvironment: 'node',
+  moduleNameMapper: {
+    '^src/(.*)$': '<rootDir>/src/$1', // Map 'src' alias to the actual folder
+  },
 };

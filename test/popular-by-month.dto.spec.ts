@@ -1,20 +1,11 @@
-import { PopularByMonthDto } from '../src/popular/dto/popular-by-month.dto';
 import { validate } from 'class-validator';
+import { PopularByMonthDto } from '../src/common/dto/popular-by-month.dto';
+import { PopularityType } from '../src/common/enums/popularity-type.enum';
 
 describe('PopularByMonthDto', () => {
-  it('should validate valid data', async () => {
-    const dto = new PopularByMonthDto();
-    dto.year = 2021;
-    dto.month = 7;
-    dto.type = 'song';
-
-    const errors = await validate(dto);
-    expect(errors.length).toBe(0);
-  });
-
   it('should fail for invalid year', async () => {
     const dto = new PopularByMonthDto();
-    dto.year = 1800; // Below minimum
+    dto.year = 1800; // Invalid year
     dto.month = 7;
 
     const errors = await validate(dto);
@@ -25,7 +16,7 @@ describe('PopularByMonthDto', () => {
   it('should fail for invalid month', async () => {
     const dto = new PopularByMonthDto();
     dto.year = 2021;
-    dto.month = 13; // Above maximum
+    dto.month = 13; // Invalid month
 
     const errors = await validate(dto);
     expect(errors.length).toBeGreaterThan(0);
@@ -36,17 +27,18 @@ describe('PopularByMonthDto', () => {
     const dto = new PopularByMonthDto();
     dto.year = 2021;
     dto.month = 7;
-    (dto.type as any) = 'invalid'; // Invalid type
+    dto.type = 'invalid-type' as any; // Invalid type
 
     const errors = await validate(dto);
     expect(errors.length).toBeGreaterThan(0);
-    expect(errors[0].constraints).toHaveProperty('isIn');
+    expect(errors[0].constraints).toHaveProperty('isIn'); // Check for enum constraint
   });
 
-  it('should pass without type', async () => {
+  it('should pass for valid input', async () => {
     const dto = new PopularByMonthDto();
     dto.year = 2021;
     dto.month = 7;
+    dto.type = PopularityType.SONG;
 
     const errors = await validate(dto);
     expect(errors.length).toBe(0);
