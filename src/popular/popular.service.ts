@@ -39,9 +39,7 @@ export class PopularService {
       // Filter songs by year
       const filteredSongs = allSongs.filter((song) => song.year === year);
       if (filteredSongs.length === 0) {
-        throw new BadRequestException(
-          `No songs found for year ${year}.`,
-        );
+        throw new BadRequestException(`No songs found for year ${year}.`);
       }
 
       // Determine the play count field based on the month number
@@ -65,34 +63,10 @@ export class PopularService {
         throw new BadRequestException(`Invalid month: ${month}.`);
       }
 
-      // Sort songs/albums based on plays in the specified month
-      let sortedItems: any[] = [];
-      if (type === PopularityType.SONG) {
-        sortedItems = filteredSongs
-          .filter((song) => song[monthField] !== undefined)
-          .sort((a, b) => b[monthField] - a[monthField])
-          .map((song) => ({
-            title: song.title,
-            artist: song.artist,
-            album: song.album,
-            plays: song[monthField],
-          }));
-      } else if (type === PopularityType.ALBUM) {
-        // Aggregate plays per album
-        const albumPlaysMap: { [album: string]: number } = {};
-        filteredSongs.forEach((song) => {
-          if (!albumPlaysMap[song.album]) {
-            albumPlaysMap[song.album] = 0;
-          }
-          albumPlaysMap[song.album] += song[monthField] || 0;
-        });
-        sortedItems = Object.entries(albumPlaysMap)
-          .map(([album, plays]) => ({ album, plays }))
-          .sort((a, b) => b.plays - a.plays);
-      }
-
-      // Select top 10 items
-      popularItems = sortedItems.slice(0, 10);
+      popularItems =
+        type === PopularityType.SONG
+          ? this.getPopularSongsByMonth(filteredSongs, monthField)
+          : this.getPopularAlbumsByMonth(filteredSongs, monthField);
 
       // Cache the result
       await this.cacheManager.set(cacheKey, popularItems, 300);
@@ -124,43 +98,10 @@ export class PopularService {
         throw new BadRequestException(`No songs data available.`);
       }
 
-      if (type === PopularityType.SONG) {
-        // Aggregate total plays per song across all months
-        const songPlays = allSongs.map((song) => {
-          const totalPlays = Object.keys(song)
-            .filter((key) => key.startsWith('plays'))
-            .reduce((sum, key) => sum + (song[key as keyof SongRecord] || 0), 0);
-          return {
-            title: song.title,
-            artist: song.artist,
-            album: song.album,
-            totalPlays,
-          };
-        });
-
-        // Sort songs by total plays
-        popularItems = songPlays
-          .sort((a, b) => b.totalPlays - a.totalPlays)
-          .slice(0, 10);
-      } else if (type === PopularityType.ALBUM) {
-        // Aggregate total plays per album across all songs and months
-        const albumPlaysMap: { [album: string]: number } = {};
-        allSongs.forEach((song) => {
-          if (!albumPlaysMap[song.album]) {
-            albumPlaysMap[song.album] = 0;
-          }
-          const songTotalPlays = Object.keys(song)
-            .filter((key) => key.startsWith('plays'))
-            .reduce((sum, key) => sum + (song[key as keyof SongRecord] || 0), 0);
-          albumPlaysMap[song.album] += songTotalPlays;
-        });
-
-        // Convert map to array and sort by total plays
-        popularItems = Object.entries(albumPlaysMap)
-          .map(([album, plays]) => ({ album, totalPlays: plays }))
-          .sort((a, b) => b.totalPlays - a.totalPlays)
-          .slice(0, 10);
-      }
+      popularItems =
+        type === PopularityType.SONG
+          ? this.aggregateTotalPlays(allSongs, PopularityType.SONG)
+          : this.aggregateTotalPlays(allSongs, PopularityType.ALBUM);
 
       // Cache the result
       await this.cacheManager.set(cacheKey, popularItems, 600);
@@ -170,5 +111,84 @@ export class PopularService {
     }
 
     return popularItems || [];
+  }
+
+  private getPopularSongsByMonth(
+    songs: SongRecord[],
+    monthField: string,
+  ): any[] {
+    return songs
+      .filter((song) => song[monthField] !== undefined)
+      .sort((a, b) => b[monthField] - a[monthField])
+      .map((song) => ({
+        title: song.title,
+        artist: song.artist,
+        album: song.album,
+        plays: song[monthField],
+      }))
+      .slice(0, 10); // Top 10
+  }
+
+  private getPopularAlbumsByMonth(
+    songs: SongRecord[],
+    monthField: string,
+  ): any[] {
+    const albumPlaysMap: { [album: string]: number } = {};
+    songs.forEach((song) => {
+      if (!albumPlaysMap[song.album]) {
+        albumPlaysMap[song.album] = 0;
+      }
+      albumPlaysMap[song.album] += song[monthField] || 0;
+    });
+
+    return Object.entries(albumPlaysMap)
+      .map(([album, plays]) => ({ album, plays }))
+      .sort((a, b) => b.plays - a.plays)
+      .slice(0, 10); // Top 10
+  }
+
+  private aggregateTotalPlays(
+    songs: SongRecord[],
+    type: PopularityType,
+  ): any[] {
+    if (type === PopularityType.SONG) {
+      return songs
+        .map((song) => {
+          const totalPlays = Object.keys(song)
+            .filter((key) => key.startsWith('plays'))
+            .reduce(
+              (sum, key) => sum + (song[key as keyof SongRecord] || 0),
+              0,
+            );
+          return {
+            title: song.title,
+            artist: song.artist,
+            album: song.album,
+            totalPlays,
+          };
+        })
+        .sort((a, b) => b.totalPlays - a.totalPlays)
+        .slice(0, 10);
+    } else if (type === PopularityType.ALBUM) {
+      const albumPlaysMap: { [album: string]: number } = {};
+      songs.forEach((song) => {
+        if (!albumPlaysMap[song.album]) {
+          albumPlaysMap[song.album] = 0;
+        }
+        const songTotalPlays = Object.keys(song)
+          .filter((key) => key.startsWith('plays'))
+          .reduce(
+            (sum, key) => sum + (song[key as keyof SongRecord] || 0),
+            0,
+          );
+        albumPlaysMap[song.album] += songTotalPlays;
+      });
+
+      return Object.entries(albumPlaysMap)
+        .map(([album, totalPlays]) => ({ album, totalPlays }))
+        .sort((a, b) => b.totalPlays - a.totalPlays)
+        .slice(0, 10);
+    }
+    return [];
   }
 }
