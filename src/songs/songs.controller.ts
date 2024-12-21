@@ -2,12 +2,10 @@ import { Controller, Get, Query, UseGuards } from '@nestjs/common';
 import { SongsService } from './songs.service';
 import { YearDto } from '../common/dto/year.dto';
 import { SortDto } from '../common/dto/sort.dto';
-import { JwtAuthGuard } from '../auth/auth.guard';
 import { ApiTags, ApiBearerAuth, ApiOperation } from '@nestjs/swagger';
 
 @ApiTags('songs')
 @ApiBearerAuth()
-@UseGuards(JwtAuthGuard)
 @Controller('songs')
 export class SongsController {
   constructor(private readonly songsService: SongsService) {}

@@ -1,6 +1,5 @@
 import { Module, OnModuleInit } from '@nestjs/common';
 import { CacheModule } from '@nestjs/cache-manager';
-import { AuthModule } from './auth/auth.module';
 import { HealthModule } from './health/health.module';
 import { SongsModule } from './songs/songs.module';
 import { PopularModule } from './popular/popular.module';
@@ -9,7 +8,6 @@ import { DataLoaderService } from './data-loader/data-loader.service';
 
 @Module({
   imports: [
-    AuthModule,
     HealthModule,
     SongsModule,
     PopularModule,
