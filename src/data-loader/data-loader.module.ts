@@ -5,4 +5,4 @@ import { DataLoaderService } from './data-loader.service';
   providers: [DataLoaderService],
   exports: [DataLoaderService],
 })
-export class DataModule {}
+export class DataLoaderModule {}

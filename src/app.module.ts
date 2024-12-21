@@ -8,10 +8,12 @@ import { DataLoaderService } from './data-loader/data-loader.service';
 import { WinstonModule } from 'nest-winston';
 import { getWinstonConfig } from './config/logger';
 import { CommonModule } from './common/common.module';
+import { DataLoaderModule } from './data-loader/data-loader.module';
 
 @Module({
   imports: [
     WinstonModule.forRoot(getWinstonConfig()),
+    DataLoaderModule,
     CommonModule,
     HealthModule,
     SongsModule,
@@ -23,7 +25,6 @@ import { CommonModule } from './common/common.module';
       max: 100,
     }),
   ],
-  providers: [DataLoaderService],
 })
 export class AppModule implements OnModuleInit {
   constructor(private readonly dataLoaderService: DataLoaderService) {}

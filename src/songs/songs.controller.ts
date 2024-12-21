@@ -2,7 +2,7 @@ import { Controller, Get, Query, UseGuards } from '@nestjs/common';
 import { SongsService } from './songs.service';
 import { YearDto } from '../common/dto/year.dto';
 import { SortDto } from '../common/dto/sort.dto';
-import { ApiTags, ApiOperation, ApiSecurity } from '@nestjs/swagger';
+import { ApiTags, ApiOperation, ApiSecurity, ApiQuery } from '@nestjs/swagger';
 
 @ApiTags('songs')
 @ApiSecurity('api-key')
@@ -12,13 +12,13 @@ export class SongsController {
 
   @ApiOperation({ summary: 'Get songs by year or sorted' })
   @Get()
-  async getSongs(@Query() query: YearDto & SortDto) {
-    if (query.year) {
-      return this.songsService.getSongsByYear(query.year);
+  @ApiQuery({ name: 'field', required: false, enum: ['year', 'playsJune', 'playsJuly', 'playsAugust', 'title', 'artist', 'album'] })
+  async getSongs(@Query('field') field: string) {
+    if (field) {
+      return this.songsService.getSongsSorted(field);
+    } else {
+      // Handle the case where no field is provided, e.g., return unsorted songs or use a default sort
+      return this.songsService.getAllSongs(); // Assuming you have a method to get all songs without sorting
     }
-    if (query.sort) {
-      return this.songsService.getSongsSorted(query.sort);
-    }
-    return this.songsService.getSongsSorted('releaseDate');
   }
 }

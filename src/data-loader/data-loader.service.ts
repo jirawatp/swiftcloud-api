@@ -45,11 +45,15 @@ export class DataLoaderService {
           this.logger.log(`Loaded ${results.length} songs.`);
           resolve();
         })
-        .on('error', (err: unknown) => reject(err));
+        .on('error', (err: unknown) => {
+          this.logger.error('Error loading songs data:', err);
+          reject(err);
+        });
     });
   }
 
   getSongs(): SongRecord[] {
+    this.logger.log(`Returning ${this.songs.length} songs`);
     return this.songs;
   }
 }
