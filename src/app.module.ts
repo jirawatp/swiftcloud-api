@@ -7,10 +7,12 @@ import { SearchModule } from './search/search.module';
 import { DataLoaderService } from './data-loader/data-loader.service';
 import { WinstonModule } from 'nest-winston';
 import { getWinstonConfig } from './config/logger';
+import { CommonModule } from './common/common.module';
 
 @Module({
   imports: [
     WinstonModule.forRoot(getWinstonConfig()),
+    CommonModule,
     HealthModule,
     SongsModule,
     PopularModule,

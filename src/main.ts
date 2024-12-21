@@ -1,4 +1,4 @@
-import { NestFactory } from '@nestjs/core';
+import { NestFactory, Reflector } from '@nestjs/core';
 import { AppModule } from './app.module';
 import { ValidationPipe } from './validation.pipe';
 import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
@@ -12,8 +12,11 @@ import { Logger } from '@nestjs/common';
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
 
+  const reflector = app.get(Reflector);
+  const apiKeyGuard = app.get(ApiKeyGuard);
+
   app.useGlobalPipes(new ValidationPipe());
-  app.useGlobalGuards(new ApiKeyGuard());
+  app.useGlobalGuards(apiKeyGuard);
   app.use(helmet());
   app.use(compression());
 

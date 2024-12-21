@@ -1,13 +1,11 @@
 import { Controller, Get } from '@nestjs/common';
-import { ApiTags, ApiOperation } from '@nestjs/swagger';
-import dayjs from 'dayjs';
+import { Public } from '../common/decorators/public.decorator';
 
-@ApiTags('health')
 @Controller('health')
 export class HealthController {
-  @ApiOperation({ summary: 'Health check endpoint' })
+  @Public()
   @Get()
-  checkHealth() {
-    return { status: 'ok', timestamp: dayjs().toISOString() };
+  getHealth(): { status: string } {
+    return { status: 'ok' };
   }
 }
