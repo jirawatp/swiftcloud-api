@@ -30,7 +30,7 @@ async function bootstrap() {
   const port = AppConfig.port;
   await app.listen(port);
 
-  const logger = new Logger('Bootstrap');
+  const logger = new Logger('swiftcloud-api');
 
   logger.log(`Application running on: http://localhost:${port}`, 'Bootstrap');
   logger.log(`Swagger docs: http://localhost:${port}/api-docs`, 'Bootstrap');
