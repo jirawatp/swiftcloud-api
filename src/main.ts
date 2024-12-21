@@ -1,12 +1,11 @@
 import { NestFactory, Reflector } from '@nestjs/core';
 import { AppModule } from './app.module';
-import { ValidationPipe } from './validation.pipe';
 import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
 import helmet from 'helmet';
 import compression from 'compression';
 import { ApiKeyGuard } from './common/guards/api-key.guard';
 import { AppConfig } from './config/app.config'; // Ensure this path matches your actual config file location
-import { Logger } from '@nestjs/common';
+import { Logger, ValidationPipe } from '@nestjs/common';
 
 
 async function bootstrap() {
@@ -15,7 +14,11 @@ async function bootstrap() {
   const reflector = app.get(Reflector);
   const apiKeyGuard = app.get(ApiKeyGuard);
 
-  app.useGlobalPipes(new ValidationPipe());
+  app.useGlobalPipes(new ValidationPipe({
+    whitelist: true,
+    transform: true,
+    forbidNonWhitelisted: true,
+  }));
   app.useGlobalGuards(apiKeyGuard);
   app.use(helmet());
   app.use(compression());

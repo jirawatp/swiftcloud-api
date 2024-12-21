@@ -1,7 +1,8 @@
-import { Controller, Get, Query, UseGuards } from '@nestjs/common';
+import { Controller, Get, Query, BadRequestException } from '@nestjs/common';
 import { PopularService } from './popular.service';
-import { PopularDto } from '../common/dto/popular.dto';
-import { ApiTags, ApiSecurity, ApiOperation } from '@nestjs/swagger';
+import { PopularByMonthDto } from '../common/dto/popular-by-month.dto';
+import { PopularityType } from '../common/enums/popularity-type.enum';
+import { ApiTags, ApiOperation, ApiSecurity, ApiQuery } from '@nestjs/swagger';
 
 @ApiTags('popular')
 @ApiSecurity('api-key')
@@ -9,10 +10,39 @@ import { ApiTags, ApiSecurity, ApiOperation } from '@nestjs/swagger';
 export class PopularController {
   constructor(private readonly popularService: PopularService) {}
 
-  @ApiOperation({ summary: 'Get most popular songs by month/year' })
-  @Get()
-  async getPopular(@Query() query: PopularDto) {
-    const { year, month } = query;
-    return this.popularService.getMostPopular(year, month);
+  @ApiOperation({ summary: 'Get popular songs or albums for a specific month and year' })
+  @Get('by-month')
+  @ApiQuery({ 
+    name: 'year', 
+    required: true, 
+    type: Number, 
+    description: 'Year of the songs' 
+  })
+  @ApiQuery({ 
+    name: 'month', 
+    required: true, 
+    type: Number, 
+    description: 'Month of the songs (1-12)' 
+  })
+  @ApiQuery({ 
+    name: 'type', 
+    required: false, 
+    enum: PopularityType, 
+    description: 'Type of popularity query: song or album' 
+  })
+  async getPopularByMonth(@Query() query: PopularByMonthDto) {
+    return this.popularService.getPopularByMonth(query.year, query.month, query.type);
+  }
+
+  @ApiOperation({ summary: 'Get popular songs or albums overall, across all months' })
+  @Get('overall')
+  @ApiQuery({ 
+    name: 'type', 
+    required: false, 
+    enum: ['song', 'album'], 
+    description: 'Type of popularity query: song or album' 
+  })
+  async getPopularOverall(@Query('type') type?: PopularityType) {
+    return this.popularService.getPopularOverall(type || PopularityType.SONG);
   }
 }
