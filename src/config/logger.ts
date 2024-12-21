@@ -1,16 +1,13 @@
-import { WinstonModuleOptions } from 'nest-winston';
-import { transports, format } from 'winston';
+import * as winston from 'winston';
+import { utilities as nestWinstonModuleUtilities } from 'nest-winston';
 
-export function getWinstonConfig(): WinstonModuleOptions {
-  return {
-    transports: [
-      new transports.Console({
-        format: format.combine(
-          format.timestamp(),
-          format.colorize({ all: true }),
-          format.printf(({ timestamp, level, message }) => `${timestamp} [${level}] ${message}`)
-        )
-      })
-    ]
-  };
-}
+export const getWinstonConfig = () => ({
+  transports: [
+    new winston.transports.Console({
+      format: winston.format.combine(
+        winston.format.timestamp(),
+        nestWinstonModuleUtilities.format.nestLike('SwiftCloud', { prettyPrint: true }),
+      ),
+    }),
+  ],
+});
