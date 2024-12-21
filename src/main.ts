@@ -20,13 +20,22 @@ async function bootstrap() {
   app.use(helmet());
   app.use(compression());
 
-  const config = new DocumentBuilder()
+  const swaggerConfig = new DocumentBuilder()
     .setTitle('SwiftCloud API')
     .setDescription('API for querying Taylor Swift songs data')
     .setVersion('1.0')
+    .addApiKey(
+      {
+        type: 'apiKey',
+        name: 'x-api-key',
+        in: 'header',
+      },
+      'api-key',
+    )
     .build();
 
-  const document = SwaggerModule.createDocument(app, config);
+
+  const document = SwaggerModule.createDocument(app, swaggerConfig);
   SwaggerModule.setup('api-docs', app, document);
 
   // Use AppConfig for port

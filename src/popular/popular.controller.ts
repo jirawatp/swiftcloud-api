@@ -1,10 +1,10 @@
 import { Controller, Get, Query, UseGuards } from '@nestjs/common';
 import { PopularService } from './popular.service';
 import { PopularDto } from '../common/dto/popular.dto';
-import { ApiTags, ApiBearerAuth, ApiOperation } from '@nestjs/swagger';
+import { ApiTags, ApiSecurity, ApiOperation } from '@nestjs/swagger';
 
 @ApiTags('popular')
-@ApiBearerAuth()
+@ApiSecurity('api-key')
 @Controller('popular')
 export class PopularController {
   constructor(private readonly popularService: PopularService) {}
