@@ -2,7 +2,7 @@ import { Controller, Get, Query, UseGuards } from '@nestjs/common';
 import { SearchDto } from '../common/dto/search.dto';
 import { SearchService } from './search.service';
 import { ApiTags, ApiSecurity, ApiOperation } from '@nestjs/swagger';
-import { PaginationDto } from 'src/common/dto/pagination.dto';
+import { PaginationDto } from '../common/dto/pagination.dto';
 
 @ApiTags('search')
 @ApiSecurity('api-key')
