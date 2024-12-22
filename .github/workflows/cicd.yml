@@ -49,17 +49,15 @@ jobs:
           docker push ghcr.io/${{ github.repository }}/swiftcloud-api:$GITHUB_SHA
           docker push ghcr.io/${{ github.repository }}/swiftcloud-api:latest
 
+       - name: Authenticate with Google Cloud
+        uses: google-github-actions/auth@v0
+        with:
+          credentials_json: ${{ secrets.GCP_SA_KEY }}
+
       - name: Set up Google Cloud SDK
         uses: google-github-actions/setup-gcloud@v1
         with:
           project_id: ${{ secrets.GCP_PROJECT_ID }}
-          credentials: ${{ secrets.GCP_SA_KEY }}
-
-      - name: Set active account
-        run: gcloud auth activate-service-account --key-file=/github/workspace/service-account.json
-
-      - name: Verify authentication
-        run: gcloud auth list
 
       - name: Deploy to Cloud Run
         run: |
