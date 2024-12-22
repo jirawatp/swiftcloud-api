@@ -1,0 +1,1 @@
+export const ALLOWED_SORT_FIELDS = ['playCount', 'releaseDate'];
