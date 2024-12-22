@@ -49,7 +49,7 @@ jobs:
           docker push ghcr.io/${{ github.repository }}/swiftcloud-api:$GITHUB_SHA
           docker push ghcr.io/${{ github.repository }}/swiftcloud-api:latest
 
-       - name: Authenticate with Google Cloud
+      - name: Authenticate with Google Cloud
         uses: google-github-actions/auth@v0
         with:
           credentials_json: ${{ secrets.GCP_SA_KEY }}
