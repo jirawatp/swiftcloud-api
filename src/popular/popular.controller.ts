@@ -1,8 +1,9 @@
-import { Controller, Get, Query, BadRequestException } from '@nestjs/common';
+import { Controller, Get, Query } from '@nestjs/common';
+import { ApiTags, ApiOperation, ApiQuery, ApiSecurity } from '@nestjs/swagger';
 import { PopularService } from './popular.service';
 import { PopularByMonthDto } from '../common/dto/popular-by-month.dto';
-import { PopularityType } from '../common/enums/popularity-type.enum';
-import { ApiTags, ApiOperation, ApiSecurity, ApiQuery } from '@nestjs/swagger';
+import { PaginationDto } from '../common/dto/pagination.dto';
+import { PopularityType } from 'src/common/enums/popularity-type.enum';
 
 @ApiTags('popular')
 @ApiSecurity('api-key')
@@ -10,39 +11,35 @@ import { ApiTags, ApiOperation, ApiSecurity, ApiQuery } from '@nestjs/swagger';
 export class PopularController {
   constructor(private readonly popularService: PopularService) {}
 
-  @ApiOperation({ summary: 'Get popular songs or albums for a specific month and year' })
-  @Get('by-month')
-  @ApiQuery({ 
-    name: 'year', 
-    required: true, 
-    type: Number, 
-    description: 'Year of the songs' 
-  })
-  @ApiQuery({ 
-    name: 'month', 
-    required: true, 
-    type: Number, 
-    description: 'Month of the songs (1-12)' 
-  })
-  @ApiQuery({ 
-    name: 'type', 
-    required: false, 
-    enum: PopularityType, 
-    description: 'Type of popularity query: song or album' 
-  })
-  async getPopularByMonth(@Query() query: PopularByMonthDto) {
-    return this.popularService.getPopularByMonth(query.year, query.month, query.type);
+  @ApiOperation({ summary: 'Get most popular songs or albums by month' })
+  @ApiQuery({ name: 'limit', required: false, description: 'Number of items to return', example: 10 })
+  @ApiQuery({ name: 'offset', required: false, description: 'Number of items to skip', example: 0 })
+  @Get()
+  async getPopularByMonth(
+    @Query() query: PopularByMonthDto,
+    @Query() pagination: PaginationDto,
+  ) {
+    return this.popularService.getPopularByMonth(
+      query.year,
+      query.month,
+      query.type,
+      pagination.limit,
+      pagination.offset,
+    );
   }
 
-  @ApiOperation({ summary: 'Get popular songs or albums overall, across all months' })
+  @ApiOperation({ summary: 'Get most popular songs or albums overall' })
+  @ApiQuery({ name: 'limit', required: false, description: 'Number of items to return', example: 10 })
+  @ApiQuery({ name: 'offset', required: false, description: 'Number of items to skip', example: 0 })
   @Get('overall')
-  @ApiQuery({ 
-    name: 'type', 
-    required: false, 
-    enum: ['song', 'album'], 
-    description: 'Type of popularity query: song or album' 
-  })
-  async getPopularOverall(@Query('type') type?: PopularityType) {
-    return this.popularService.getPopularOverall(type || PopularityType.SONG);
+  async getPopularOverall(
+    @Query('type') type: PopularityType,
+    @Query() pagination: PaginationDto,
+  ) {
+    return this.popularService.getPopularOverall(
+      type,
+      pagination.limit,
+      pagination.offset,
+    );
   }
 }

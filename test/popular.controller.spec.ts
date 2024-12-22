@@ -1,16 +1,12 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { PopularController } from '../src/popular/popular.controller';
 import { PopularService } from '../src/popular/popular.service';
-import { PopularByMonthDto } from '../src/common/dto/popular-by-month.dto';
+import { CACHE_MANAGER } from '@nestjs/cache-manager';
 import { PopularityType } from '../src/common/enums/popularity-type.enum';
 
 describe('PopularController', () => {
   let controller: PopularController;
   let service: PopularService;
-
-  const mockPopularService = {
-    getPopularByMonth: jest.fn(),
-  };
 
   beforeEach(async () => {
     const module: TestingModule = await Test.createTestingModule({
@@ -18,7 +14,17 @@ describe('PopularController', () => {
       providers: [
         {
           provide: PopularService,
-          useValue: mockPopularService,
+          useValue: {
+            getPopularByMonth: jest.fn(),
+            getPopularOverall: jest.fn(),
+          },
+        },
+        {
+          provide: CACHE_MANAGER,
+          useValue: {
+            get: jest.fn(),
+            set: jest.fn(),
+          },
         },
       ],
     }).compile();
@@ -27,23 +33,64 @@ describe('PopularController', () => {
     service = module.get<PopularService>(PopularService);
   });
 
-  it('should be defined', () => {
-    expect(controller).toBeDefined();
+  it('should return popular songs by month', async () => {
+    jest.spyOn(service, 'getPopularByMonth').mockResolvedValue([
+      { title: 'Song A', artist: 'Taylor Swift', plays: 100 },
+    ]);
+
+    const result = await controller.getPopularByMonth(
+      { year: 2021, month: 6, type: PopularityType.SONG },
+      { limit: 10, offset: 0 },
+    );
+    expect(result).toEqual([{ title: 'Song A', artist: 'Taylor Swift', plays: 100 }]);
+    expect(service.getPopularByMonth).toHaveBeenCalledWith(2021, 6, PopularityType.SONG, 10, 0);
   });
 
-  describe('getPopularByMonth', () => {
-    it('should return popular songs by month', async () => {
-      const dto: PopularByMonthDto = { year: 2021, month: 7, type: PopularityType.SONG };
-      const expectedResult = [
-        { title: 'Song B', artist: 'Artist 2', album: 'Album Beta', plays: 300 },
-        { title: 'Song A', artist: 'Artist 1', album: 'Album Alpha', plays: 150 },
-      ];
+  it('should return popular albums by month', async () => {
+    jest.spyOn(service, 'getPopularByMonth').mockResolvedValue([
+      { album: 'Folklore', plays: 150 },
+    ]);
 
-      mockPopularService.getPopularByMonth.mockResolvedValue(expectedResult);
+    const result = await controller.getPopularByMonth(
+      { year: 2021, month: 6, type: PopularityType.ALBUM },
+      { limit: 10, offset: 0 },
+    );
+    expect(result).toEqual([{ album: 'Folklore', plays: 150 }]);
+    expect(service.getPopularByMonth).toHaveBeenCalledWith(2021, 6, PopularityType.ALBUM, 10, 0);
+  });
 
-      const result = await controller.getPopularByMonth(dto);
-      expect(result).toEqual(expectedResult);
-      expect(service.getPopularByMonth).toHaveBeenCalledWith(2021, 7, PopularityType.SONG);
-    });
+  it('should return overall popular songs', async () => {
+    jest.spyOn(service, 'getPopularOverall').mockResolvedValue([
+      { title: 'Song B', artist: 'Taylor Swift', totalPlays: 500 },
+    ]);
+
+    const result = await controller.getPopularOverall(
+      PopularityType.SONG,
+      { limit: 10, offset: 0 },
+    );
+    expect(result).toEqual([{ title: 'Song B', artist: 'Taylor Swift', totalPlays: 500 }]);
+    expect(service.getPopularOverall).toHaveBeenCalledWith(PopularityType.SONG, 10, 0);
+  });
+
+  it('should return overall popular albums', async () => {
+    jest.spyOn(service, 'getPopularOverall').mockResolvedValue([
+      { album: 'Evermore', totalPlays: 300 },
+    ]);
+
+    const result = await controller.getPopularOverall(
+      PopularityType.ALBUM,
+      { limit: 10, offset: 0 },
+    );
+    expect(result).toEqual([{ album: 'Evermore', totalPlays: 300 }]);
+    expect(service.getPopularOverall).toHaveBeenCalledWith(PopularityType.ALBUM, 10, 0);
+  });
+
+  it('should handle invalid month error', async () => {
+    jest.spyOn(service, 'getPopularByMonth').mockRejectedValue(new Error('Invalid month: 13'));
+
+    await expect(
+      controller.getPopularByMonth({ year: 2021, month: 13, type: PopularityType.SONG }, { limit: 10, offset: 0 }),
+    ).rejects.toThrow('Invalid month: 13');
+    expect(service.getPopularByMonth).toHaveBeenCalledWith(2021, 13, PopularityType.SONG, 10, 0);
   });
 });

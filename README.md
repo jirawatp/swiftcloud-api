@@ -99,7 +99,7 @@ npm run test
 1. Build the Docker image:
 
    ```bash
-   docker build -t swiftcloud-api .
+   npm run docker:build
    ```
 
 2. Run the container:

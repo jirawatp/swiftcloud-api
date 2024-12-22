@@ -1,11 +1,11 @@
 import { Test, TestingModule } from '@nestjs/testing';
-import { SongsService } from '../src/songs/songs.service';
 import { SongsController } from '../src/songs/songs.controller';
-import { SongRecord } from '../src/data-loader/data-loader.service';
+import { SongsService } from '../src/songs/songs.service';
+import { CACHE_MANAGER } from '@nestjs/cache-manager';
 
 describe('SongsController', () => {
-  let songsController: SongsController;
-  let songsService: SongsService;
+  let controller: SongsController;
+  let service: SongsService;
 
   beforeEach(async () => {
     const module: TestingModule = await Test.createTestingModule({
@@ -14,62 +14,59 @@ describe('SongsController', () => {
         {
           provide: SongsService,
           useValue: {
-            getSongsSorted: jest.fn(),
             getAllSongs: jest.fn(),
+            getSongsSorted: jest.fn(),
+          },
+        },
+        {
+          provide: CACHE_MANAGER,
+          useValue: {
+            get: jest.fn(),
+            set: jest.fn(),
           },
         },
       ],
     }).compile();
 
-    songsController = module.get<SongsController>(SongsController);
-    songsService = module.get<SongsService>(SongsService);
+    controller = module.get<SongsController>(SongsController);
+    service = module.get<SongsService>(SongsService);
+  });
+
+  it('should return paginated songs', async () => {
+    jest.spyOn(service, 'getAllSongs').mockResolvedValue([
+      {
+        title: 'Song A', artist: 'Artist A', year: 2021,
+        writer: '',
+        album: ''
+      },
+    ]);
+
+    const result = await controller.getSongs('', { limit: 10, offset: 0 });
+    expect(result).toEqual([{
+      title: 'Song A',
+      artist: 'Artist A',
+      year: 2021,
+      writer: '',
+      album: '',
+    }]);
   });
 
   it('should return sorted songs', async () => {
-    const mockSongs: SongRecord[] = [
+    jest.spyOn(service, 'getSongsSorted').mockResolvedValue([
       {
-        title: 'Song A',
-        artist: 'Artist A',
-        writer: 'Writer A',
-        album: 'Album A',
-        year: 2020,
+        title: 'Song B', artist: 'Artist B', year: 2021,
+        writer: '',
+        album: ''
       },
-      {
-        title: 'Song B',
-        artist: 'Artist B',
-        writer: 'Writer B',
-        album: 'Album B',
-        year: 2021,
-      },
-    ];
-    jest.spyOn(songsService, 'getSongsSorted').mockResolvedValue(mockSongs);
+    ]);
 
-    const result = await songsController.getSongs('title');
-    expect(result).toEqual(mockSongs);
-    expect(songsService.getSongsSorted).toHaveBeenCalledWith('title', 'asc');
-  });
-
-  it('should return all songs if no field is provided', async () => {
-    const mockSongs: SongRecord[] = [
-      {
-        title: 'Song A',
-        artist: 'Artist A',
-        writer: 'Writer A',
-        album: 'Album A',
-        year: 2020,
-      },
-      {
-        title: 'Song B',
-        artist: 'Artist B',
-        writer: 'Writer B',
-        album: 'Album B',
-        year: 2021,
-      },
-    ];
-    jest.spyOn(songsService, 'getAllSongs').mockResolvedValue(mockSongs);
-
-    const result = await songsController.getSongs('');
-    expect(result).toEqual(mockSongs);
-    expect(songsService.getAllSongs).toHaveBeenCalled();
+    const result = await controller.getSongs('year', { limit: 10, offset: 0 });
+    expect(result).toEqual([{
+      title: 'Song B',
+      artist: 'Artist B',
+      year: 2021,
+      writer: '',
+      album: '',
+    }]);
   });
 });
