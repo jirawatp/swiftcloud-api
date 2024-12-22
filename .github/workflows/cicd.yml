@@ -59,6 +59,12 @@ jobs:
         with:
           project_id: ${{ secrets.GCP_PROJECT_ID }}
 
+      - name: Enable Required APIs
+        run: |
+          gcloud services enable run.googleapis.com \
+            containerregistry.googleapis.com \
+            artifactregistry.googleapis.com
+
       - name: Deploy to Cloud Run
         run: |
           gcloud run deploy swiftcloud-api \
